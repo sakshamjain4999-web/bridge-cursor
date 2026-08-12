@@ -121,13 +121,13 @@ export default async function DashboardPage() {
                 .select(
                     `
           id,
-          from_city,
-          to_city,
+          from_location,
+          to_location,
           freight_amount,
           status,
           created_at,
           parties ( name ),
-          drivers ( name ),
+          drivers ( full_name ),
           vehicles ( registration_number )
         `
                 )
@@ -323,7 +323,7 @@ export default async function DashboardPage() {
                                         const status =
                                             statusConfig[trip.status] ?? statusConfig["loading"];
                                         const partyName = trip.parties?.name ?? "—";
-                                        const driverName = trip.drivers?.name ?? "—";
+                                        const driverName = trip.drivers?.full_name ?? "—";
                                         const vehicleReg =
                                             trip.vehicles?.registration_number ?? "—";
 
@@ -341,11 +341,11 @@ export default async function DashboardPage() {
                                                     <div className="flex items-center gap-2">
                                                         <MapPin className="h-3.5 w-3.5 text-muted" />
                                                         <span className="text-sm text-foreground">
-                                                            {trip.from_city || "—"}
+                                                            {trip.from_location || "—"}
                                                         </span>
                                                         <span className="text-xs text-muted">→</span>
                                                         <span className="text-sm text-foreground">
-                                                            {trip.to_city || "—"}
+                                                            {trip.to_location || "—"}
                                                         </span>
                                                     </div>
                                                     <p className="mt-0.5 text-[11px] text-muted ml-5.5">

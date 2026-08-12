@@ -307,7 +307,7 @@ export default function PartyTabs({ partyId, trips, payments }: PartyTabsProps) 
                                                 <td className="px-6 py-3.5">
                                                     <div className="flex items-center gap-1.5 text-sm text-white">
                                                         <MapPin className="h-3.5 w-3.5 text-muted" />
-                                                        {trip.from_city || "—"} → {trip.to_city || "—"}
+                                                        {trip.from_location || "—"} → {trip.to_location || "—"}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-3.5 text-sm font-mono text-muted-light">

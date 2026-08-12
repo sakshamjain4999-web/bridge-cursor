@@ -49,7 +49,7 @@ export default async function VehicleDetailPage({
     if (vehicle.status === "on_trip") {
         const { data } = await supabase
             .from("trips")
-            .select("id, from_city, to_city, status, freight_amount, drivers(name)")
+            .select("id, from_location, to_location, status, freight_amount, drivers(full_name)")
             .eq("vehicle_id", vehicle.id)
             .in("status", ["dispatched", "in_transit"])
             .limit(1)
@@ -119,9 +119,9 @@ export default async function VehicleDetailPage({
                                 <Clock className="h-4 w-4 text-primary-light" /> Current Trip
                             </h3>
                             <div className="grid grid-cols-2 gap-3 text-sm">
-                                <div><span className="text-muted">Route: </span><span className="text-white">{currentTrip.from_city} → {currentTrip.to_city}</span></div>
+                                <div><span className="text-muted">Route: </span><span className="text-white">{currentTrip.from_location} → {currentTrip.to_location}</span></div>
                                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                <div><span className="text-muted">Driver: </span><span className="text-white">{(currentTrip.drivers as any)?.name || "—"}</span></div>
+                                <div><span className="text-muted">Driver: </span><span className="text-white">{(currentTrip.drivers as any)?.full_name || "—"}</span></div>
                                 <div><span className="text-muted">Amount: </span><span className="text-white">₹{currentTrip.freight_amount?.toLocaleString("en-IN") || "—"}</span></div>
                                 <div><span className="text-muted">Status: </span><span className="text-primary-light font-medium">{currentTrip.status}</span></div>
                             </div>

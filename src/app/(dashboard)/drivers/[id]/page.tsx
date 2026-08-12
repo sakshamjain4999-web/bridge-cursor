@@ -108,7 +108,7 @@ export default async function DriverDetailPage({
         const { data } = await supabase
             .from("trips")
             .select(
-                "id, from_city, to_city, status, freight_amount, vehicles ( registration_number )"
+                "id, from_location, to_location, status, freight_amount, vehicles ( registration_number )"
             )
             .eq("driver_id", driver.id)
             .in("status", ["dispatched", "in_transit"])
@@ -229,7 +229,7 @@ export default async function DriverDetailPage({
                                 <div>
                                     <span className="text-muted">Route: </span>
                                     <span className="text-white">
-                                        {currentTrip.from_city} → {currentTrip.to_city}
+                                        {currentTrip.from_location} → {currentTrip.to_location}
                                     </span>
                                 </div>
                                 <div>

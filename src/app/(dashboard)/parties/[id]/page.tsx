@@ -34,7 +34,7 @@ export default async function PartyDetailPage({
 
     const { data: trips } = await supabase
         .from("trips")
-        .select("id, from_city, to_city, status, freight_amount, created_at, vehicles ( registration_number ), drivers ( full_name )")
+        .select("id, from_location, to_location, status, freight_amount, created_at, vehicles ( registration_number ), drivers ( full_name )")
         .eq("party_id", id)
         .order("created_at", { ascending: false });
 
