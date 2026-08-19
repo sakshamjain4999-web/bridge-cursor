@@ -22,6 +22,8 @@ interface Trip {
   notes: string;
   vehicle_id: string | null;
   driver_id: string | null;
+  org_id: string | null;
+  party_id: string | null;
   vehicles?: { registration_number: string; make: string; model: string } | null;
   drivers?: { full_name: string; phone: string } | null;
 }
@@ -31,15 +33,14 @@ interface Expense {
   category: string;
   amount: number;
   description: string;
-  date: string;
+  expense_date: string;
 }
 
 interface Payment {
   id: string;
   amount: number;
   payment_date: string;
-  payment_mode: string;
-  notes: string;
+  payment_method: string;
 }
 
 function statusStyle(status: string) {
@@ -91,8 +92,8 @@ export default function TripDetailPage() {
           .select(`*, vehicles(registration_number, make, model), drivers(full_name, phone)`)
           .eq("id", tripId)
           .single(),
-        supabase.from("trip_expenses").select("*").eq("trip_id", tripId).order("date", { ascending: false }),
-        supabase.from("trip_payments").select("*").eq("trip_id", tripId).order("payment_date", { ascending: false }),
+        supabase.from("expenses").select("*").eq("trip_id", tripId).order("expense_date", { ascending: false }),
+        supabase.from("payments").select("*").eq("trip_id", tripId).order("payment_date", { ascending: false }),
       ]);
       if (tripRes.data) setTrip(tripRes.data as Trip);
       setExpenses((expRes.data || []) as Expense[]);
@@ -129,12 +130,14 @@ export default function TripDetailPage() {
     if (!expCategory || !expAmount) return;
     setSavingExp(true);
     try {
-      const { error } = await supabase.from("trip_expenses").insert([{
+      const { error } = await supabase.from("expenses").insert([{
         trip_id: tripId,
+        vehicle_id: trip?.vehicle_id || null,
         category: expCategory,
         amount: parseFloat(expAmount),
         description: expDesc,
-        date: expDate || new Date().toISOString().split("T")[0],
+        expense_date: expDate || new Date().toISOString().split("T")[0],
+        org_id: trip?.org_id || null,
       }]);
       if (error) throw error;
       toast.success("Expense added");
@@ -154,12 +157,14 @@ export default function TripDetailPage() {
     setSavingPay(true);
     try {
       const pa = parseFloat(payAmount);
-      const { error } = await supabase.from("trip_payments").insert([{
+      const { error } = await supabase.from("payments").insert([{
         trip_id: tripId,
+        party_id: trip?.party_id || null,
+        invoice_id: null,
         amount: pa,
+        payment_method: payMode,
         payment_date: payDate || new Date().toISOString().split("T")[0],
-        payment_mode: payMode,
-        notes: payNotes,
+        org_id: trip?.org_id || null,
       }]);
       if (error) throw error;
       // Update trip balance
@@ -377,7 +382,7 @@ export default function TripDetailPage() {
                     <div>
                       <p className="text-sm font-bold text-zinc-200">{exp.category}</p>
                       {exp.description && <p className="text-xs text-zinc-500 mt-0.5">{exp.description}</p>}
-                      {exp.date && <p className="text-[10px] text-zinc-600 mt-0.5">{new Date(exp.date).toLocaleDateString("en-IN")}</p>}
+                      {exp.expense_date && <p className="text-[10px] text-zinc-600 mt-0.5">{new Date(exp.expense_date).toLocaleDateString("en-IN")}</p>}
                     </div>
                     <p className="text-base font-extrabold text-red-400">₹{(exp.amount || 0).toLocaleString("en-IN")}</p>
                   </div>
@@ -448,8 +453,7 @@ export default function TripDetailPage() {
                 {payments.map((pay) => (
                   <div key={pay.id} className="bg-zinc-900/40 border border-zinc-800 rounded-xl px-5 py-4 flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-bold text-zinc-200 capitalize">{pay.payment_mode?.replace("_", " ") || "Cash"}</p>
-                      {pay.notes && <p className="text-xs text-zinc-500 mt-0.5">{pay.notes}</p>}
+                      <p className="text-sm font-bold text-zinc-200 capitalize">{pay.payment_method?.replace("_", " ") || "Cash"}</p>
                       {pay.payment_date && <p className="text-[10px] text-zinc-600 mt-0.5">{new Date(pay.payment_date).toLocaleDateString("en-IN")}</p>}
                     </div>
                     <p className="text-base font-extrabold text-emerald-400">₹{(pay.amount || 0).toLocaleString("en-IN")}</p>
