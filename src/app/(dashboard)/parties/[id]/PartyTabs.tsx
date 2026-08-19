@@ -46,8 +46,6 @@ interface PartyTabsProps {
 const initialPayment = {
     amount: "",
     payment_method: "cash",
-    reference_number: "",
-    notes: "",
     payment_date: new Date().toISOString().split("T")[0],
 };
 
@@ -111,8 +109,6 @@ export default function PartyTabs({ partyId, trips, payments }: PartyTabsProps) 
             party_id: partyId,
             amount,
             payment_method: form.payment_method,
-            reference_number: form.reference_number.trim() || null,
-            notes: form.notes.trim() || null,
             payment_date: form.payment_date,
         });
 
@@ -157,8 +153,6 @@ export default function PartyTabs({ partyId, trips, payments }: PartyTabsProps) 
             .update({
                 amount,
                 payment_method: form.payment_method,
-                reference_number: form.reference_number.trim() || null,
-                notes: form.notes.trim() || null,
                 payment_date: form.payment_date,
             })
             .eq("id", selectedPayment.id);
@@ -224,8 +218,6 @@ export default function PartyTabs({ partyId, trips, payments }: PartyTabsProps) 
         setForm({
             amount: pay.amount?.toString() || "",
             payment_method: pay.payment_method || "cash",
-            reference_number: pay.reference_number || "",
-            notes: pay.notes || "",
             payment_date: pay.payment_date || pay.created_at?.split("T")[0] || new Date().toISOString().split("T")[0],
         });
         setError("");
@@ -352,8 +344,6 @@ export default function PartyTabs({ partyId, trips, payments }: PartyTabsProps) 
                                     <tr className="border-b border-border text-xs font-medium uppercase tracking-wider text-muted">
                                         <th className="px-6 py-3 text-left">Date</th>
                                         <th className="px-6 py-3 text-left">Method</th>
-                                        <th className="px-6 py-3 text-left">Reference</th>
-                                        <th className="px-6 py-3 text-left">Notes</th>
                                         <th className="px-6 py-3 text-right">Amount</th>
                                         <th className="px-6 py-3 text-center">Actions</th>
                                     </tr>
@@ -375,12 +365,6 @@ export default function PartyTabs({ partyId, trips, payments }: PartyTabsProps) 
                                                 <span className="inline-flex rounded-lg bg-surface px-2.5 py-1 text-xs font-medium text-muted-light capitalize">
                                                     {pay.payment_method?.replace(/_/g, " ") || "—"}
                                                 </span>
-                                            </td>
-                                            <td className="px-6 py-3.5 text-sm font-mono text-muted-light">
-                                                {pay.reference_number || "—"}
-                                            </td>
-                                            <td className="px-6 py-3.5 text-sm text-muted-light max-w-[200px] truncate">
-                                                {pay.notes || "—"}
                                             </td>
                                             <td className="px-6 py-3.5 text-right">
                                                 <span className="inline-flex items-center gap-1 text-sm font-semibold text-success">
@@ -455,16 +439,8 @@ export default function PartyTabs({ partyId, trips, payments }: PartyTabsProps) 
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="block text-xs font-medium uppercase tracking-wider text-muted">Reference Number</label>
-                                    <input name="reference_number" value={form.reference_number} onChange={set} placeholder="TXN123456" className={`${inputCls} font-mono`} />
-                                </div>
-                                <div className="space-y-2">
                                     <label className="block text-xs font-medium uppercase tracking-wider text-muted">Payment Date</label>
                                     <input name="payment_date" type="date" value={form.payment_date} onChange={set} required className={`${inputCls} scheme-dark`} />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="block text-xs font-medium uppercase tracking-wider text-muted">Notes</label>
-                                    <input name="notes" value={form.notes} onChange={set} placeholder="Partial payment for trip #42" className={inputCls} />
                                 </div>
                                 <div className="border-t border-border pt-5">
                                     <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-success to-emerald-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-success/25 hover:shadow-success/40 disabled:cursor-not-allowed disabled:opacity-60 transition-all">
@@ -518,16 +494,8 @@ export default function PartyTabs({ partyId, trips, payments }: PartyTabsProps) 
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="block text-xs font-medium uppercase tracking-wider text-muted">Reference Number</label>
-                                    <input name="reference_number" value={form.reference_number} onChange={set} placeholder="TXN123456" className={`${inputCls} font-mono`} />
-                                </div>
-                                <div className="space-y-2">
                                     <label className="block text-xs font-medium uppercase tracking-wider text-muted">Payment Date</label>
                                     <input name="payment_date" type="date" value={form.payment_date} onChange={set} required className={`${inputCls} scheme-dark`} />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="block text-xs font-medium uppercase tracking-wider text-muted">Notes</label>
-                                    <input name="notes" value={form.notes} onChange={set} placeholder="Partial payment details" className={inputCls} />
                                 </div>
                                 <div className="border-t border-border pt-5">
                                     <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-primary to-primary-dark py-3.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 hover:shadow-primary/40 disabled:cursor-not-allowed disabled:opacity-60 transition-all">

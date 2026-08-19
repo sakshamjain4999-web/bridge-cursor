@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Truck, Navigation, PackageCheck } from "lucide-react";
+import { Loader2, Truck, Navigation, PackageCheck, Ban } from "lucide-react";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 interface TripActionsProps {
@@ -19,56 +19,64 @@ export default function TripActions({ trip }: TripActionsProps) {
         setLoading(true);
         const supabase = createClient();
 
-        // Update trip status
-        const { error } = await supabase
-            .from("trips")
-            .update({ status: newStatus })
-            .eq("id", trip.id);
+        try {
+            // Update trip status
+            const { error } = await supabase
+                .from("trips")
+                .update({ status: newStatus })
+                .eq("id", trip.id);
 
-        if (error) {
-            toast.error("Error: " + error.message);
+            if (error) throw error;
+
+            // On "delivered" or "cancelled" — safely release vehicle and driver
+            if (newStatus === "delivered" || newStatus === "cancelled") {
+                if (trip.vehicle_id) {
+                    await supabase
+                        .from("vehicles")
+                        .update({ status: "available" })
+                        .eq("id", trip.vehicle_id)
+                        .eq("status", "on_trip");
+                }
+
+                if (trip.driver_id) {
+                    await supabase
+                        .from("drivers")
+                        .update({ status: "available" })
+                        .eq("id", trip.driver_id)
+                        .eq("status", "on_trip");
+                }
+            } else if (newStatus === "dispatched" || newStatus === "in_transit") {
+                // Ensure assigned resources are on_trip
+                if (trip.vehicle_id) {
+                    await supabase
+                        .from("vehicles")
+                        .update({ status: "on_trip" })
+                        .eq("id", trip.vehicle_id)
+                        .eq("status", "available");
+                }
+                if (trip.driver_id) {
+                    await supabase
+                        .from("drivers")
+                        .update({ status: "on_trip" })
+                        .eq("id", trip.driver_id)
+                        .eq("status", "available");
+                }
+            }
+
+            const messages: Record<string, string> = {
+                dispatched: "Trip dispatched ho gayi!",
+                in_transit: "Trip ab transit mein hai!",
+                delivered: "Trip delivered ho gayi! 🎉",
+                cancelled: "Trip cancel ho gayi.",
+            };
+
+            toast.success(messages[newStatus] || "Status updated!");
+            router.refresh();
+        } catch (err: any) {
+            toast.error("Error: " + (err.message || "Failed to update status"));
+        } finally {
             setLoading(false);
-            return;
         }
-
-        // On "Mark Delivered" — release vehicle + driver + update party outstanding
-        if (newStatus === "delivered") {
-            if (trip.vehicle_id) {
-                await supabase
-                    .from("vehicles")
-                    .update({ status: "available" })
-                    .eq("id", trip.vehicle_id);
-            }
-
-            if (trip.driver_id) {
-                await supabase
-                    .from("drivers")
-                    .update({ status: "available" })
-                    .eq("id", trip.driver_id);
-            }
-
-            // Calculate balance and add to party outstanding
-            const freightAmount = Number(trip.freight_amount) || 0;
-            const advancePaid = Number(trip.advance_paid) || 0;
-            const balanceAmount = freightAmount - advancePaid;
-
-            if (trip.party_id && balanceAmount > 0) {
-                await supabase.rpc("increment_party_business", {
-                    party_id: trip.party_id,
-                    amount: balanceAmount,
-                });
-            }
-        }
-
-        const messages: Record<string, string> = {
-            dispatched: "Trip dispatched ho gayi!",
-            in_transit: "Trip ab transit mein hai!",
-            delivered: "Trip delivered ho gayi! 🎉",
-        };
-
-        toast.success(messages[newStatus] || "Status updated!");
-        setLoading(false);
-        router.refresh();
     };
 
     const status = trip.status;
@@ -121,6 +129,20 @@ export default function TripActions({ trip }: TripActionsProps) {
                     Mark Delivered
                 </button>
             )}
+
+            <button
+                onClick={() => {
+                    if (window.confirm("Kya aap sach mein is trip ko cancel karna chahte hain?")) {
+                        updateStatus("cancelled");
+                    }
+                }}
+                disabled={loading}
+                className="flex items-center gap-1.5 rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 text-xs font-semibold text-red-400 hover:bg-red-500/20 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-60 transition-all"
+                title="Cancel Trip"
+            >
+                <Ban className="h-3.5 w-3.5" />
+                Cancel Trip
+            </button>
         </div>
     );
 }

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
+import TripActions from "./TripActions";
 
 interface Trip {
   id: string;
@@ -64,9 +65,6 @@ export default function TripDetailPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "expenses" | "payments">("overview");
 
-  // Status update
-  const [updatingStatus, setUpdatingStatus] = useState(false);
-
   // Add expense form
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [expCategory, setExpCategory] = useState("");
@@ -110,20 +108,7 @@ export default function TripDetailPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tripId]);
 
-  const handleStatusUpdate = async (newStatus: string) => {
-    if (!trip) return;
-    setUpdatingStatus(true);
-    try {
-      const { error } = await supabase.from("trips").update({ status: newStatus }).eq("id", tripId);
-      if (error) throw error;
-      setTrip({ ...trip, status: newStatus });
-      toast.success(`Status updated to ${newStatus}`);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update status");
-    } finally {
-      setUpdatingStatus(false);
-    }
-  };
+
 
   const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -230,7 +215,8 @@ export default function TripDetailPage() {
             <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider">GR: {trip.gr_no || "—"} · {trip.trip_number || tripId.slice(0, 8)}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <TripActions trip={trip} />
           <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusStyle(trip.status)}`}>
             {trip.status}
           </span>
@@ -301,26 +287,6 @@ export default function TripDetailPage() {
               </div>
             )}
 
-            {/* Status actions */}
-            <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-5">
-              <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">Update Status</p>
-              <div className="flex flex-wrap gap-2">
-                {(["pending", "dispatched", "in_transit", "delivered", "cancelled"] as const).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => handleStatusUpdate(s)}
-                    disabled={updatingStatus || trip.status === s}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border cursor-pointer ${
-                      trip.status === s
-                        ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400 cursor-default"
-                        : "border-zinc-700 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200 hover:bg-zinc-800/60"
-                    } disabled:opacity-50`}
-                  >
-                    {s.replace("_", " ")}
-                  </button>
-                ))}
-              </div>
-            </div>
           </>
         )}
 

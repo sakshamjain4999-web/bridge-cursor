@@ -59,7 +59,7 @@ export default function AddExpenseButton() {
 
     supabase
       .from("trips")
-      .select("id, trip_number, from_location, to_location")
+      .select("id, trip_number, from_location, to_location, org_id")
       .order("created_at", { ascending: false })
       .limit(50)
       .then(({ data }) => setTrips(data ?? []));
@@ -78,6 +78,7 @@ export default function AddExpenseButton() {
 
     const supabase = createClient();
 
+    const selectedTrip = trips.find((t) => t.id === form.trip_id);
     const { error: insertErr } = await supabase.from("expenses").insert({
       category: form.category,
       amount: Number(form.amount),
@@ -85,6 +86,7 @@ export default function AddExpenseButton() {
       vehicle_id: form.vehicle_id || null,
       trip_id: form.trip_id || null,
       expense_date: form.expense_date,
+      org_id: selectedTrip?.org_id || null,
     });
 
     if (insertErr) {
