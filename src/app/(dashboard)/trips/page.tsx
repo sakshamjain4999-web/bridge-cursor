@@ -71,10 +71,18 @@ export default async function TripsPage({
         .from("trips")
         .select(
             `
-      *,
-      parties(name, phone),
-      vehicles(registration_number),
-      drivers(full_name, phone)
+      id,
+      status,
+      from_location,
+      to_location,
+      freight_amount,
+      created_at,
+      market_vehicle_number,
+      market_transporter_name,
+      market_driver_name,
+      parties ( name ),
+      vehicles ( registration_number ),
+      drivers ( full_name )
     `
         )
         .order("created_at", { ascending: false });
