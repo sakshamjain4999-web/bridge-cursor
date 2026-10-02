@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import AddVehicleButton from "./AddVehicleButton";
 import VehicleCard from "./VehicleCard";
 import ExpiryBanner from "./ExpiryBanner";
+import { elapsedSince, logPerformance, startPerformanceContext, startTimer } from "@/lib/performance-diagnostics";
 
 // Document fields to check for expiry
 const DOC_FIELDS = [
@@ -18,13 +19,16 @@ const DOC_FIELDS = [
 ] as const;
 
 export default async function FleetPage() {
+  const perf = await startPerformanceContext("/fleet");
   const supabase = await createClient();
 
   // Fetch all vehicles (RLS disabled for testing)
+  const vehiclesQueryStartedAt = startTimer();
   const { data: vehicles } = await supabase
     .from("vehicles")
     .select("*")
     .order("created_at", { ascending: false });
+  const vehiclesQueryDuration = elapsedSince(vehiclesQueryStartedAt);
 
   const vehicleList = vehicles ?? [];
 
@@ -66,7 +70,7 @@ export default async function FleetPage() {
   // Sort: expired first, then by days left ascending
   expiryWarnings.sort((a, b) => a.daysLeft - b.daysLeft);
 
-  return (
+  const page = (
     <div className="space-y-6 animate-fade-in">
       {/* Expiry Alert Banners */}
       {expiryWarnings.length > 0 && (
@@ -131,4 +135,7 @@ export default async function FleetPage() {
       )}
     </div>
   );
+
+  logPerformance(perf, [["Vehicles query", vehiclesQueryDuration]]);
+  return page;
 }
