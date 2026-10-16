@@ -8,6 +8,20 @@ import {
   waitForLockBlock,
 } from "../../helpers/db-test-client";
 
+interface RecordPartyPaymentResult {
+  success: boolean;
+  payment_id: string;
+  new_outstanding: number;
+}
+
+interface RecordPartyPaymentRow {
+  result: RecordPartyPaymentResult;
+}
+
+interface BackendPidRow {
+  pid: number;
+}
+
 describe("Phase 6B Payment Integrity & Ledger Hardening (CI Integration)", () => {
   beforeAll(async () => {
     // Apply synthetic baseline and Phase 6B migration to disposable CI database
@@ -28,7 +42,7 @@ describe("Phase 6B Payment Integrity & Ledger Hardening (CI Integration)", () =>
       await setTenantContext(client, userId);
 
       // Call Phase 6B RPC: General party payment of 20,000
-      const res = await client.query(`
+      const res = await client.query<RecordPartyPaymentRow>(`
         SELECT public.record_party_payment(
           p_party_id := $1,
           p_amount := 20000,
@@ -134,7 +148,7 @@ describe("Phase 6B Payment Integrity & Ledger Hardening (CI Integration)", () =>
       await setTenantContext(client, userId);
 
       // Payment 1: 30,000 -> status transitions to 'partial'
-      const pay1 = await client.query(`
+      const pay1 = await client.query<RecordPartyPaymentRow>(`
         SELECT public.record_party_payment(
           p_party_id := $1,
           p_amount := 30000,
@@ -151,7 +165,7 @@ describe("Phase 6B Payment Integrity & Ledger Hardening (CI Integration)", () =>
       expect(tripCheck1.rows[0].payment_status).toBe("partial");
 
       // Payment 2: 20,000 -> status transitions to 'paid'
-      const pay2 = await client.query(`
+      const pay2 = await client.query<RecordPartyPaymentRow>(`
         SELECT public.record_party_payment(
           p_party_id := $1,
           p_amount := 20000,
@@ -264,8 +278,8 @@ describe("Phase 6B Payment Integrity & Ledger Hardening (CI Integration)", () =>
       const tripId = tripRes.rows[0].id;
 
       // Get backend PIDs for lock verification
-      const pid1Res = await client1.query("SELECT pg_backend_pid() AS pid;");
-      const pid2Res = await client2.query("SELECT pg_backend_pid() AS pid;");
+      const pid1Res = await client1.query<BackendPidRow>("SELECT pg_backend_pid() AS pid;");
+      const pid2Res = await client2.query<BackendPidRow>("SELECT pg_backend_pid() AS pid;");
       const pid1: number = pid1Res.rows[0].pid;
       const pid2: number = pid2Res.rows[0].pid;
 
