@@ -96,7 +96,7 @@ export default function TripDetailPage() {
       if (tripRes.data) setTrip(tripRes.data as Trip);
       setExpenses((expRes.data || []) as Expense[]);
       setPayments((payRes.data || []) as Payment[]);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
     } finally {
       setLoading(false);
@@ -104,7 +104,9 @@ export default function TripDetailPage() {
   };
 
   useEffect(() => {
-    if (tripId) fetchAll();
+    if (tripId) {
+      void Promise.resolve().then(() => fetchAll());
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tripId]);
 
@@ -129,8 +131,8 @@ export default function TripDetailPage() {
       setExpCategory(""); setExpAmount(""); setExpDesc(""); setExpDate("");
       setShowExpenseForm(false);
       fetchAll();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to add expense");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to add expense");
     } finally {
       setSavingExp(false);
     }
@@ -166,8 +168,8 @@ export default function TripDetailPage() {
       setPayAmount(""); setPayDate(""); setPayMode("cash"); setPayNotes("");
       setShowPaymentForm(false);
       fetchAll();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to record payment");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to record payment");
     } finally {
       setSavingPay(false);
     }

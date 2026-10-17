@@ -22,7 +22,7 @@ export async function requestPasswordReset(email: string) {
     }
 
     return { success: true }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Password reset action error:', err)
     return {
       success: false,
@@ -43,7 +43,7 @@ export async function updatePassword(password: string) {
     }
 
     return { success: true }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Password update action error:', err)
     return {
       success: false,
